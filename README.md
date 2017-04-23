@@ -22,6 +22,7 @@ public class TestController {
 }
 ```
 2. 配置host，把a.com和b.com都指向本地
+
 ![host配置](/pictures/hosts.png)
 
 3. 编写请求页面，使用jq发送get的ajax请求，请求地址中使用b.com的绝对地址
@@ -34,8 +35,11 @@ function get1() {
 ```
 
 4. 访问a.com,点击get的ajax请求，发生跨域错误
+
 ![](/pictures/get1.png)
+
 `注意！划重点！后台的get请求是执行成功了的！`
+
 ![](/pictures/get1result.png)
 
 5. 编写无参数post请求post1
@@ -55,14 +59,16 @@ function post1() {
 		url : "http://b.com:8080/post1",
 		dataType : "json",
 		success : function(data) {
-			console.log("jsonp Loaded: ", data);
+			console.log("post1 Loaded: ", data);
 		}
 	});
 }
 ```
 
 7. 执行post1，前台报跨域错误，后台同样执行成功！
+
 ![](/pictures/post1.png)
+
 ![](/pictures/post1-2.png)
 
 8. 编写带参数post请求post2，参数格式为form-urlencoded格式（就是a=1&b=2这种）
@@ -88,7 +94,7 @@ function post2() {
 		url : "http://b.com:8080/post2",
 		dataType : "json",
 		success : function(data) {
-			console.log("jsonp Loaded: ", data);
+			console.log("post2 Loaded: ", data);
 		}
 	});
 }
@@ -123,7 +129,7 @@ function post3() {
 		url : "http://b.com:8080/post3",
 		dataType : "json",
 		success : function(data) {
-			console.log("jsonp Loaded: ", data);
+			console.log("post3 Loaded: ", data);
 		}
 	});
 }
@@ -144,13 +150,17 @@ function post3() {
 # 产生跨域错误的条件
 
 1. 必须是浏览器上发出的请求
+
 其实就是浏览器多管闲事，觉得【可能】有安全问题，所以不允许。非浏览器发生的请求没有这个问题，如你在java代码中掉任何域都不可能报这个问题。
 
 2.必须是ajax异步请求
+
 直接访问肯定是不会错误的。
+
 ![](/pictures/get2.png)
 
 3. 跨域
+
 就是协议，域名，端口任何一个不同就算跨域。
 
 > 重点：跨域和异步请求是浏览器的概念，服务器没有跨域和异步请求的概念。
@@ -178,15 +188,20 @@ function getByJsonp(){
 }
 ```
 
-分别执行原来的ajax请求和新写的jsonp 请求，可以看到原来的get请求出现在XHR `XMLHttpRequest缩写`异步请求上，而jsonp请求没有出现在XHR上，只在所有请求上，可以看出jsonp是同步的请求。（简单这样理解，XMLHttpRequest也能发送同步请求。）截图中可以看到，jsonp请求的时候，jq会自动增加call函数。
+分别执行原来的ajax请求和新写的jsonp 请求，可以看到原来的get请求出现在XHR `XMLHttpRequest缩写`异步请求上，而jsonp请求没有出现在XHR上，只在所有请求上，可以看出`jsonp是同步请求`。（简单这样理解，其实XMLHttpRequest也能发送同步请求。）
+
+截图中可以看到，jsonp请求的时候，jq会自动增加call函数。
+
 ![](/pictures/jsonp1.png)
 
 ![](/pictures/jsonp2.png)
 
 如果服务器没有支持jsonp，返回的仍然是json格式，浏览器会报错（把json当做js执行了）。
+
 ![](/pictures/jsonp3.png)
 
 如果服务器要支持jsonp，springboot下可以增加以下配置
+
 ```Java
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.AbstractJsonpResponseBodyAdvice;
@@ -203,7 +218,7 @@ public class JsonpAdvice extends AbstractJsonpResponseBodyAdvice {
 再次调用，已经能正确获取数据打印结果了。
 ![](/pictures/jsonp4.png)
 
-重要：就算你明白了jsonp的工作原理，也不要自己编码实现jsonp，主流框架都支持jsonp的配置，直接使用即可。
+> 重要：就算你明白了jsonp的工作原理，也不要自己编码实现jsonp，主流框架都支持jsonp的配置，直接使用即可。
 
 ### jsonp有明显的几点硬伤
 
@@ -217,6 +232,7 @@ public class JsonpAdvice extends AbstractJsonpResponseBodyAdvice {
 
 ## 服务器返回支持跨域信息
 由于是浏览器出于安全考虑才限制跨域访问，那么我们可以在服务器中返回允许跨域的信息，让浏览器知道这个服务器请求支持跨域，请求就可以正常执行。
+
 最简单的方式是增加@CrossOrigin注解，该注解可以加在类上也可以加在方法上。默认允许所有域名跨域。
 
 ```Java
@@ -226,15 +242,23 @@ public class TestController
 ```
 
 再次调用所有的请求，全部成功！表明，已经可以支持跨域了。
+
 ![](/pictures/crossorigin-1.png)
+
 ![](/pictures/crossorigin-2.png)
 
-对于post3，可以看出先发出了一个options命令咨询是否可以跨域，服务器在响应头里面告诉浏览器可以跨域，如何post3请求才真正执行。所以post3会有2条请求记录。
-![](/pictures/crossorigin-2.png)
+对于post3，可以看出先发出了一个`options命令咨询`是否可以跨域，服务器在响应头里面告诉浏览器可以跨域，如何post3请求才真正执行。
+
+所以post3会有2条请求记录。
+
+![](/pictures/crossorigin-3.png)
 
 
 ## 使用反向代理解决
-既然浏览器觉得其他域名可能有安全问题，那么我们只需要把其他域名的东西变成自己域名的东西，跨域就可以解决。我们使用反向代理，代理非本域名的请求，在外面看来就是同一个系统的请求，自然不用担心跨域问题。
+既然浏览器觉得其他域名可能有安全问题，那么我们只需要把其他域名的东西变成自己域名的东西，跨域就可以解决。
+
+我们使用反向代理，代理非本域名的请求，在外面看来就是同一个系统的请求，自然不用担心跨域问题。
+
 以nginx配置为例，配置非常简单，配置如下：
 ```
  server {
