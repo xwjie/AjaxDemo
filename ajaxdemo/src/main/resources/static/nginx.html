@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+
+<body>
+	<h1>ajax demo</h1>
+	<a href="javascript:get1()" href="#">get1</a>
+	<br />
+	<a href="javascript:post1()" href="#">post1</a>
+	<br />
+	<a href="javascript:post2()" href="#">post2  以form-urlencoded格式发送参数</a>
+	<br />
+	<a href="javascript:post3()" href="#">post3  以json格式发送</a>
+	<br />
+	<a href="javascript:getByJsonp()" href="#">getByJsonp</a>
+	<br />
+
+	<script>
+		function get1() {
+			$.get("/bcom/get1", function(data) {
+				console.log("get1 Loaded: ", data);
+			});
+		}
+
+		function post1() {
+			$.ajax({
+				type : "POST",
+				url : "/bcom/post1",
+				dataType : "json",
+				success : function(data) {
+					console.log("jsonp Loaded: ", data);
+				}
+			});
+		}
+
+		function post2() {
+			var data = {
+				key1 : '以form-urlencoded格式发送参数',
+				id1 : 12345
+			}
+
+			$.ajax({
+				type : "POST",
+				data : data,
+				url : "/bcom/post2",
+				dataType : "json",
+				success : function(data) {
+					console.log("jsonp Loaded: ", data);
+				}
+			});
+		}
+
+		function post3() {
+			var data = {
+				key1 : '以json格式发送',
+				id1 : 12345
+			}
+
+			$.ajax({
+				type : "POST",
+				contentType : "application/json",
+				data : JSON.stringify(data),
+				url : "/bcom/post3",
+				dataType : "json",
+				success : function(data) {
+					console.log("jsonp Loaded: ", data);
+				}
+			});
+		}
+
+		function getByJsonp() {
+			$.ajax({
+				type : "GET",
+				url : "/bcom/get1",
+				dataType : "jsonp",
+				success : function(data) {
+					console.log("jsonp Loaded: ", data);
+				}
+			});
+		}
+	</script>
+	<script src="jquery-1.6.1.min.js"></script>
+
+</body>
+</html>
