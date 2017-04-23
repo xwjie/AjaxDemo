@@ -38,9 +38,15 @@ function get1() {
 
 ![](/pictures/get1.png)
 
-`注意！划重点！后台的get请求是执行成功了的！`
+> 注意！划重点！后台的get请求是执行成功了的！虽然前台报跨域错误！
+
+![](/pictures/get1-2.png)
+
+返回码是200。
 
 ![](/pictures/get1result.png)
+
+后台代码正常执行。
 
 5. 编写无参数post请求post1
 ```Java
@@ -247,7 +253,7 @@ public class TestController
 
 ![](/pictures/crossorigin-2.png)
 
-对于post3，可以看出先发出了一个`options命令咨询`是否可以跨域，服务器在响应头里面告诉浏览器可以跨域，如何post3请求才真正执行。
+对于post3，可以看出先发出了一个`options命令咨询`是否可以跨域，服务器在响应头里面告诉浏览器可以跨域，然后post3请求才真正执行。
 
 所以post3会有2条请求记录。
 
@@ -277,7 +283,9 @@ public class TestController
 表示 /bcom开头的请求都转发到 http://b.com:8080/
 
 然后我们把上面页面另存一份nginx.html，里面的请求地址由绝对地址 `http://b.com:8080/xxx` 改成相对地址 `/bcom/xxx`。
+
 重新测试，全部成功！
+
 ![](/pictures/nginx.png)
 
 可以看到所有请求都是 http://a.com/bcom/ 开头的。
