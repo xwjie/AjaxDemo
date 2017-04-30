@@ -259,7 +259,7 @@ public class TestController
 
 ![](/pictures/crossorigin-3.png)
 
-`OPTIONS咨询命令` 并不是每次都会发送，第一次查询的返回的头里面有一条 `Access-Control-Max-Age:1800`，是表示有效期，这个时间段不会再次发送 `OPTIONS咨询命令` 了。 
+> `OPTIONS咨询命令` 并不是每次都会发送，第一次查询的返回的头里面有一条 `Access-Control-Max-Age:1800`，是表示有效期，这个时间段不会再次发送 `OPTIONS咨询命令` 了。 
 
 ### 使用反向代理解决
 
@@ -338,7 +338,7 @@ public ResultBean<String> getWithCookie(@CookieValue(required=false) String cook
 
 # 带自定义header的跨域请求
 
-很多时候，我们需要发送自定义头的header，这个时候首先先要在服务器配置能发送哪些头。并使用 `@RequestHeader` 得到头字段。
+很多时候，我们需要发送自定义的header，这个时候首先先要在服务器配置能接受哪些header。并使用 `@RequestHeader` 得到头字段。
 
 ```Java
 @GetMapping("/getWithHeader")
@@ -378,27 +378,29 @@ function getWithHeader() {
 ```
 
 > **注意1：一开始用 jquery.1.6.1 上面代码怎么样都发送不成功，后面换了 1.11.3 版本成功了。**
+
 > 注意2：header里面的值不能直接放中文，中文必须自己编码。
+
 > 注意3：自定义头都使用 `X-` 开头，养成好习惯。
 
 发送请求前，先发送 `OPTIONS咨询命令` 看看服务器是否允许发送这些自定义头。
 
-![](/pictures/head1.png)
+![](/pictures/header1.png)
 
-> 发送请求的头会包含此次所有的自定义头列表，使用Spring`@CrossOrigin` 注解支持跨域的时候，服务器返回服务器支持的头和你请求的头的交集。服务器并没有告诉你所有支持的头。
+> 发送请求的头会包含此次所有的自定义头列表，使用Spring`@CrossOrigin` 注解支持跨域的时候，服务器返回服务器支持的头和你请求的头的**交集**。服务器并没有告诉你所有支持的头。
 
 Options命令会返回200（成功），里面会包含允许的列表，浏览器**自己判断**不一样，就会报错。
 
 ```
 XMLHttpRequest cannot load http://b.com:8080/getWithHeader. Request header field X-Custom-Header3 is not allowed by Access-Control-Allow-Headers in preflight response.
 ```
-![](/pictures/head2.png)
+![](/pictures/header2.png)
 
 我们修改上面js代码，去掉服务器没有配置的 `X-Custom-Header3` ， 重新测试，取值成功。
 
-![](/pictures/head3.png)
+![](/pictures/header3.png)
 
-![](/pictures/head4.png)
+![](/pictures/header4.png)
 
 # 总结
 
@@ -406,10 +408,10 @@ XMLHttpRequest cannot load http://b.com:8080/getWithHeader. Request header field
 
 * 发生跨域访问的三个条件：浏览器端，跨域，异步。
 * 针对异步的解决方法jsonp有很多硬伤，并不推荐。
-* 浏览器发送跨域请求之前会区分简单请求还是复杂请求，简单请求是直接请求，请求完再判断（如果不支持跨域，尽管服务器成功执行返回200，但浏览器还是报错），复杂请求会先发送 `OPTIONS咨询命令`（如果不支持跨域，返回403禁止访问错误，支持返回200，但并不一定就代表该请求能发出去，某些情况服务器还需要额外判断）。
-* 工作中遇到比较常见的复杂强求就是发送json数据的，带自定义头的。（带cookie的不是复杂请求）
+* 浏览器发送跨域请求之前会区分简单请求还是复杂请求，**简单请求**是直接请求，请求完再根据响应头信息判断（如果不支持跨域，尽管服务器成功执行返回200，但浏览器还是报错），**复杂请求**会先发送 `OPTIONS咨询命令`（如果不支持跨域，返回403禁止访问错误，支持则返回200，但并不一定就代表该请求能发出去，某些情况服务器还需要额外判断）。
+* 工作中遇到比较常见的复杂请求就是发送json数据的和带自定义头的。（带cookie的不是复杂请求）
 * 使用Spring的 `@CrossOrigin` 能很方便的解决跨域访问问题，几乎只需要一行代码。
-* 使用反向代理的比较好的解决方法，公司内部配置也比较简单。
+* 使用反向代理也是比较好的解决方法，公司内部配置也比较简单，反向代理能封装很多细节，增加很多其他特性。
 * 学会注解 `@RequestHeader` 和 `@CookieValue` 的使用，不要自己去request对象上获取这些信息。
 
 
