@@ -5,8 +5,8 @@
 > * 什么是跨域访问安全错误
 > * 产生跨域错误的条件
 > * 解决的几种思路
-> * 浏览器如何处理跨域访问
-> * h5
+> * 带cookie的跨域请求
+> * 带自定义header的跨域请求
 > * 总结
 
 # 搭建环境测试
@@ -23,7 +23,7 @@ public class TestController {
 ```
 2. 配置host，把a.com和b.com都指向本地
 
-![host配置](/pictures/hosts.png)
+![host配置](/pictures/hosts.png) 
 
 3. 编写请求页面，使用jq发送get的ajax请求，请求地址中使用b.com的绝对地址
 ```JavaScript
@@ -236,7 +236,7 @@ public class JsonpAdvice extends AbstractJsonpResponseBodyAdvice {
 
 ## 针对跨域，有2种解决方法
 
-## 服务器返回支持跨域信息
+### 服务器返回支持跨域信息
 由于是浏览器出于安全考虑才限制跨域访问，那么我们可以在服务器中返回允许跨域的信息，让浏览器知道这个服务器请求支持跨域，请求就可以正常执行。
 
 最简单的方式是增加@CrossOrigin注解，该注解可以加在类上也可以加在方法上。默认允许所有域名跨域。
@@ -253,14 +253,16 @@ public class TestController
 
 ![](/pictures/crossorigin-2.png)
 
-对于post3，可以看出先发出了一个`options命令咨询`是否可以跨域，服务器在响应头里面告诉浏览器可以跨域，然后post3请求才真正执行。
+对于post3，可以看出先发出了一个`OPTIONS咨询命令` 看是否可以跨域，服务器在响应头里面告诉浏览器可以跨域，然后post3请求才真正执行。
 
 所以post3会有2条请求记录。
 
 ![](/pictures/crossorigin-3.png)
 
+`OPTIONS咨询命令` 并不是每次都会发送，第一次查询的返回的头里面有一条 `Access-Control-Max-Age:1800`，是表示有效期，这个时间段不会再次发送 `OPTIONS咨询命令` 了。 
 
-## 使用反向代理解决
+### 使用反向代理解决
+
 既然浏览器觉得其他域名可能有安全问题，那么我们只需要把其他域名的东西变成自己域名的东西，跨域就可以解决。
 
 我们使用反向代理，代理非本域名的请求，在外面看来就是同一个系统的请求，自然不用担心跨域问题。
@@ -290,5 +292,124 @@ public class TestController
 
 可以看到所有请求都是 http://a.com/bcom/ 开头的。
 
-# 浏览器如何处理跨域访问
+# 带cookie的跨域请求
+默认跨域都是不带cookie的。
+
+但我们很多时候需要发送cookie（如会话等），这种情况发送XMLHttpRequest请求的时候，需要设置withCredentials为true，然后服务器需要修改支持cookie配置，需要返回Access-Control-Allow-Credentials:true和Access-Control-Allow-Origin:对应的域名，`此处不能用*，必须是具体的域名`。
+
+编写js代码
+
+```JavaScript
+function getWithCookie() {
+	$.ajax({
+		type : "GET",
+		url : "http://b.com:8080/getWithCookie",
+		xhrFields : {
+			withCredentials : true
+		},
+		success : function(data) {
+			console.log("getWithCookie Loaded: ", data);
+		}
+	})
+}
+```
+
+编写java代码，后台使用spring的@CookieValue注解获取cookie值。
+
+```Java
+@GetMapping("/getWithCookie")
+public ResultBean<String> getWithCookie(@CookieValue(required=false) String cookie1) {
+	System.out.println("\n-------TestController.getWithCookie(), cookie1="+cookie1);
+	return new ResultBean<String>("getWithCookie ok, cookie1="+cookie1);
+}
+```
+
+然后，在b.com上添加对应的cookie（使用工具或者document.cookie上增加），从a.com上发送getWithCookie请求到b.com，成功。
+
+![](/pictures/cookie1.png)
+
+如果发送的请求里面没有对应的cookie，会报错
+
+```
+{"timestamp":1493552031929,"status":400,"error":"Bad Request","exception":"org.springframework.web.bind.ServletRequestBindingException","message":"Missing cookie 'cookie1' for method parameter of type String","path":"/getWithCookie"}
+```
+
+服务器设置 `@CookieValue(required=false)` 即可
+
+# 带自定义header的跨域请求
+
+很多时候，我们需要发送自定义头的header，这个时候首先先要在服务器配置能发送哪些头。并使用 `@RequestHeader` 得到头字段。
+
+```Java
+@GetMapping("/getWithHeader")
+@CrossOrigin(allowedHeaders = { "X-Custom-Header1", "X-Custom-Header2", "X-Custom-Header4" })
+public ResultBean<String> getWithHeader(
+		@RequestHeader(required = false, name = "X-Custom-Header1") String header1) {
+	System.out.println("\n-------TestController.getWithHeader(), header1=" + header1);
+	return new ResultBean<String>("getWithHeader ok, header1=" + header1);
+}
+```
+
+> 注意，`@CrossOrigin(allowedHeaders = { "X-Custom-Header1", "X-Custom-Header2", "X-Custom-Header4" })`需要配置在方法上，不要配在类上面的 `@CrossOrigin` 注解上，否则会导致一些问题。
+
+编写js代码，JQ里面增加自定义头有2种方法。`headers` 和 `beforeSend事件` 加。 
+
+```JavaScript
+function getWithHeader() {
+	$.ajax({
+		type : "GET",
+		url : "http://b.com:8080/getWithHeader",
+		headers : {
+			"X-Custom-Header1" : "can not include zhongwen1111"
+		},
+		beforeSend : function(xhr) {
+			xhr.setRequestHeader("X-Custom-Header2", "can not include zhongwen2222");
+			xhr.setRequestHeader("X-Custom-Header3", "can not include zhongwen3333");
+		},
+		success : function(data) {
+			console.log("getWithHeader Loaded: ", data);
+		},
+		error:function(data) {
+			console.log("getWithHeader error: ", data);
+		},
+	})
+}
+
+```
+
+> **注意1：一开始用 jquery.1.6.1 上面代码怎么样都发送不成功，后面换了 1.11.3 版本成功了。**
+> 注意2：header里面的值不能直接放中文，中文必须自己编码。
+> 注意3：自定义头都使用 `X-` 开头，养成好习惯。
+
+发送请求前，先发送 `OPTIONS咨询命令` 看看服务器是否允许发送这些自定义头。
+
+![](/pictures/head1.png)
+
+> 发送请求的头会包含此次所有的自定义头列表，使用Spring`@CrossOrigin` 注解支持跨域的时候，服务器返回服务器支持的头和你请求的头的交集。服务器并没有告诉你所有支持的头。
+
+Options命令会返回200（成功），里面会包含允许的列表，浏览器**自己判断**不一样，就会报错。
+
+```
+XMLHttpRequest cannot load http://b.com:8080/getWithHeader. Request header field X-Custom-Header3 is not allowed by Access-Control-Allow-Headers in preflight response.
+```
+![](/pictures/head2.png)
+
+我们修改上面js代码，去掉服务器没有配置的 `X-Custom-Header3` ， 重新测试，取值成功。
+
+![](/pictures/head3.png)
+
+![](/pictures/head4.png)
+
+# 总结
+
+本着工匠精神就写细一点，发现东西还是比较多的，本来觉得写4个小时应该就能写完了，结果周末花了快2天才写完，最后总结一下，对工作中用得上的知识点。
+
+* 发生跨域访问的三个条件：浏览器端，跨域，异步。
+* 针对异步的解决方法jsonp有很多硬伤，并不推荐。
+* 浏览器发送跨域请求之前会区分简单请求还是复杂请求，简单请求是直接请求，请求完再判断（如果不支持跨域，尽管服务器成功执行返回200，但浏览器还是报错），复杂请求会先发送 `OPTIONS咨询命令`（如果不支持跨域，返回403禁止访问错误，支持返回200，但并不一定就代表该请求能发出去，某些情况服务器还需要额外判断）。
+* 工作中遇到比较常见的复杂强求就是发送json数据的，带自定义头的。（带cookie的不是复杂请求）
+* 使用Spring的 `@CrossOrigin` 能很方便的解决跨域访问问题，几乎只需要一行代码。
+* 使用反向代理的比较好的解决方法，公司内部配置也比较简单。
+* 学会注解 `@RequestHeader` 和 `@CookieValue` 的使用，不要自己去request对象上获取这些信息。
+
 

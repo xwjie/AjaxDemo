@@ -11,12 +11,19 @@
 	<br />
 	<a href="javascript:post1()" href="#">post1</a>
 	<br />
-	<a href="javascript:post2()" href="#">post2  以form-urlencoded格式发送参数</a>
+	<a href="javascript:post2()" href="#">post2 以form-urlencoded格式发送参数</a>
 	<br />
-	<a href="javascript:post3()" href="#">post3  以json格式发送</a>
+	<a href="javascript:post3()" href="#">post3 以json格式发送</a>
 	<br />
 	<a href="javascript:getByJsonp()" href="#">getByJsonp</a>
 	<br />
+	<a href="javascript:getWithCookie()" href="#">getWithCookie
+		带cookie的请求</a>
+	<br />
+	<a href="javascript:getWithHeader()" href="#">getWithHeader
+		带自定义头的请求</a>
+	<br />
+
 
 	<script>
 		function get1() {
@@ -81,8 +88,41 @@
 				}
 			});
 		}
+
+		function getWithCookie() {
+			$.ajax({
+				type : "GET",
+				url : "http://b.com:8080/getWithCookie",
+				xhrFields : {
+					withCredentials : true
+				},
+				success : function(data) {
+					console.log("getWithCookie Loaded: ", data);
+				}
+			})
+		}
+
+		function getWithHeader() {
+			$.ajax({
+				type : "GET",
+				url : "http://b.com:8080/getWithHeader",
+				headers : {
+					"X-Custom-Header1" : "can not include zhongwen1111"
+				},
+				beforeSend : function(xhr) {
+					xhr.setRequestHeader("X-Custom-Header2", "can not include zhongwen2222");
+					//xhr.setRequestHeader("X-Custom-Header3", "can not include zhongwen3333");
+				},
+				success : function(data) {
+					console.log("getWithHeader Loaded: ", data);
+				},
+				error:function(data) {
+					console.log("getWithHeader error: ", data);
+				},
+			})
+		}
 	</script>
-	<script src="jquery-1.6.1.min.js"></script>
+	<script src="jquery-1.11.3.min.js"></script>
 
 </body>
 </html>
