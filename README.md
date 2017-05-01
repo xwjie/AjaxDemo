@@ -222,6 +222,21 @@ public class JsonpAdvice extends AbstractJsonpResponseBodyAdvice {
 增加后会自动判断是否是jsonp，如果是json就返回对应的js。
 
 再次调用，已经能正确获取数据打印结果了。
+
+发送的请求，带上了jq随机生成的函数名 `jQuery111309350735532809726_1493608521320` 。
+
+```
+http://b.com:8080/get1?callback=jQuery111309350735532809726_1493608521320&_=1493608521322
+```
+
+返回的结果，是调用 `jQuery111309350735532809726_1493608521320` 函数的js语句。
+
+```
+/**/jQuery111309350735532809726_1493608521320({"code":0,"msg":"success","data":"get1 ok"});
+```
+
+![](/pictures/jsonp5.png)
+
 ![](/pictures/jsonp4.png)
 
 > 重要：就算你明白了jsonp的工作原理，也不要自己编码实现jsonp，主流框架都支持jsonp的配置，直接使用即可。
@@ -248,6 +263,10 @@ public class TestController
 ```
 
 再次调用所有的请求，全部成功！表明，已经可以支持跨域了。
+
+返回允许跨域信息
+
+![](/pictures/crossorigin-0.png)
 
 ![](/pictures/crossorigin-1.png)
 
@@ -282,7 +301,7 @@ public class TestController
         }
 }
 ```
-表示 /bcom开头的请求都转发到 http://b.com:8080/
+表示 `/bcom` 开头的请求都转发到 http://b.com:8080/
 
 然后我们把上面页面另存一份nginx.html，里面的请求地址由绝对地址 `http://b.com:8080/xxx` 改成相对地址 `/bcom/xxx`。
 
@@ -295,7 +314,7 @@ public class TestController
 # 带cookie的跨域请求
 默认跨域都是不带cookie的。
 
-但我们很多时候需要发送cookie（如会话等），这种情况发送XMLHttpRequest请求的时候，需要设置withCredentials为true，然后服务器需要修改支持cookie配置，需要返回Access-Control-Allow-Credentials:true和Access-Control-Allow-Origin:对应的域名，`此处不能用*，必须是具体的域名`。
+但我们很多时候需要发送cookie（如会话等），这种情况发送XMLHttpRequest请求的时候，**客户端**需要设置 `withCredentials` 为true，然后**服务端**需要返回支持cookie配置，需要返回 `Access-Control-Allow-Credentials : true` 和 `Access-Control-Allow-Origin : 对应的域名` ，注意：`此处不能用*，必须是具体的域名`。
 
 编写js代码
 
@@ -408,8 +427,8 @@ XMLHttpRequest cannot load http://b.com:8080/getWithHeader. Request header field
 
 * 发生跨域访问的三个条件：浏览器端，跨域，异步。
 * 针对异步的解决方法jsonp有很多硬伤，并不推荐。
-* 浏览器发送跨域请求之前会区分简单请求还是复杂请求，**简单请求**是直接请求，请求完再根据响应头信息判断（如果不支持跨域，尽管服务器成功执行返回200，但浏览器还是报错），**复杂请求**会先发送 `OPTIONS咨询命令`（如果不支持跨域，返回403禁止访问错误，支持则返回200，但并不一定就代表该请求能发出去，某些情况服务器还需要额外判断）。
-* 工作中遇到比较常见的复杂请求就是发送json数据的和带自定义头的。（带cookie的不是复杂请求）
+* 浏览器发送跨域请求之前会区分简单请求还是非简单请求，**简单请求**是直接请求，请求完再根据响应头信息判断（如果不支持跨域，尽管服务器成功执行返回200，但浏览器还是报错），**非简单请求**会先发送 `OPTIONS咨询命令`（如果不支持跨域，返回403禁止访问错误，支持则返回200，但并不一定就代表该请求能发出去，某些情况服务器还需要额外判断）。
+* 工作中遇到比较常见的非简单请求就是发送json数据的和带自定义头的。（带cookie的是简单请求）
 * 使用Spring的 `@CrossOrigin` 能很方便的解决跨域访问问题，几乎只需要一行代码。
 * 使用反向代理也是比较好的解决方法，公司内部配置也比较简单，反向代理能封装很多细节，增加很多其他特性。
 * 学会注解 `@RequestHeader` 和 `@CookieValue` 的使用，不要自己去request对象上获取这些信息。
