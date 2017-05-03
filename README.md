@@ -8,6 +8,10 @@
 > * 带cookie的跨域请求
 > * 带自定义header的跨域请求
 > * 总结
+> * 培训的问题列表
+
+![大纲](/pictures/all.png) 
+
 
 # 搭建环境测试
 1. 使用springboot搭建后台服务，编写get请求。
@@ -151,7 +155,7 @@ function post3() {
 5. 测试结束
 
 # 什么是跨域访问安全错误
-不照抄网上的语言了，用我的理解来说，就是浏览器出于安全考虑，在异步请求其他域的url的时候，会判断服务器是否允许跨域，如果不允许就会抛出跨域错误。
+不照抄网上的语言了，用我的理解来说，就是浏览器出于安全考虑，在异步（ajax）请求其他域的url的时候，会判断服务器是否允许跨域，如果不允许就会抛出跨域错误。
 
 # 产生跨域错误的条件
 
@@ -177,7 +181,7 @@ function post3() {
 ## 针对浏览器，指定参数让浏览器闭嘴，不检查。
 以chrome为例，增加参数--disable-web-security --user-data-dir=C:\MyChromeDevUserData 启动chrome即可解决，由于实际意义不大，不单独演示，大家有兴趣本机自己尝试即可。
 
-## 针对异步请求，使用jsonp，异步变同步
+## 针对异步请求，使用jsonp
 `jsonp`是比较上古的方式了，现在很多老系统还能看到。jsonp其实就插入了一个script标签来【同步】加载代码。服务器由原来的返回json数据，变成返回了调用函数的【js脚本】给浏览器执行，这个函数就是jsonp里面的callback函数，函数名是需要前台传给后台的。
 
 我们来测试一下，编写json调用代码。主要就是 `dataType: "jsonp"`
@@ -194,7 +198,7 @@ function getByJsonp(){
 }
 ```
 
-分别执行原来的ajax请求和新写的jsonp 请求，可以看到原来的get请求出现在XHR `XMLHttpRequest缩写`异步请求上，而jsonp请求没有出现在XHR上，只在所有请求上，可以看出`jsonp是同步请求`。（简单这样理解，其实XMLHttpRequest也能发送同步请求。）
+分别执行原来的ajax请求和新写的jsonp 请求，可以看到原来的get请求出现在XHR `XMLHttpRequest缩写`异步请求上，而jsonp请求没有出现在XHR上，只在所有请求上，可以看出`jsonp不是XHR请求`。（其实jsonp的实现机制的动态插入script标签实现的，script标签在非ie浏览器在H5下也支持异步。）
 
 截图中可以看到，jsonp请求的时候，jq会自动增加call函数。
 
@@ -206,7 +210,7 @@ function getByJsonp(){
 
 ![](/pictures/jsonp3.png)
 
-如果服务器要支持jsonp，springboot下可以增加以下配置
+如果服务器要支持jsonp，springboot下可以增加以下配置 `AbstractJsonpResponseBodyAdvice`
 
 ```Java
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -243,7 +247,6 @@ http://b.com:8080/get1?callback=jQuery111309350735532809726_1493608521320&_=1493
 
 ### jsonp有明显的几点硬伤
 
-- 异步变成同步了
 - 返回json变成返回js了，所以服务器是要改动支持的，不是调用方一厢情愿说用就能用的。
 - 由于是动态内嵌script标签，那么肯定是不支持post方法了
 
@@ -432,5 +435,20 @@ XMLHttpRequest cannot load http://b.com:8080/getWithHeader. Request header field
 * 使用Spring的 `@CrossOrigin` 能很方便的解决跨域访问问题，几乎只需要一行代码。
 * 使用反向代理也是比较好的解决方法，公司内部配置也比较简单，反向代理能封装很多细节，增加很多其他特性。
 * 学会注解 `@RequestHeader` 和 `@CookieValue` 的使用，不要自己去request对象上获取这些信息。
+
+# 培训的问题列表
+
+培训中问的问题列表，单独列出来供大家参考。
+
+## jsonp为什么只支持get，不支持post？
+jsonp不是使用xhr发送的，是使用动态插入script标签实现的，当前无法指定请求的method，只能是get。调用的地方看着一样，实际上和普通的ajax有2点明显差异：1. 不是使用xhr 2.服务器返回的不是json数据，而是js代码。
+
+## 在a上跨域访问b的时候，发送cookie的时候发送的是a.com 的还是 b.com 的cookie？
+这个很明显是发送b.com的。cookie都是发送请求的url的域名上的。b.com上面不可能访问到a.com的cookie的。
+
+那为什么实践中，调用其他公司内的子系统，会有a.com上的一些cookie？那是因为公司的sso单点登录的时候，把cookie设置到一级域名 `.huawei.com` ,而且 `hostOnly` 为false，所以二级域名都能访问到对应的cookie。所以同一个大域名下公司做单点登录太简单了。 
+
+另外说一点：`cookie不区分端口`。
+
 
 
