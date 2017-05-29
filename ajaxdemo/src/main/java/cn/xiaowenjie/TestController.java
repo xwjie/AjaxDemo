@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import cn.xiaowenjie.beans.Param;
 import cn.xiaowenjie.beans.ResultBean;
 
-@CrossOrigin()
+//@CrossOrigin()
 @RestController
 public class TestController {
 
