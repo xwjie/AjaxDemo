@@ -9,6 +9,7 @@
 > * 带自定义header的跨域请求
 > * 总结
 > * 培训的问题列表
+> * 简单请求定义
 
 ![大纲](/pictures/all.png) 
 
@@ -450,5 +451,40 @@ jsonp不是使用xhr发送的，是使用动态插入script标签实现的，当前无法指定请求的method
 
 另外说一点：`cookie不区分端口`。
 
+# 简单请求定义
+
+[定义请查看这篇文章](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
+
+公司里面，最近别人问的最多的就是跨域问题，从来没有人跑过来问我数据结构的问题。。。
+
+** GET不一定就是普通请求。**  ** POST不一定就是非简单请求。**
+
+## Simple requests
+Some requests don’t trigger a CORS preflight. Those are called “simple requests” in this article, though the Fetch spec (which defines CORS) doesn’t use that term. A request that doesn’t trigger a CORS preflight—a so-called “simple request”—is one that meets all the following conditions:
+
+### The only allowed methods are:
+* GET
+* HEAD
+* POST
+
+### Apart from the headers set automatically by the user agent (for example, Connection, User-Agent, or any of the other headers with names defined in the Fetch spec as a “forbidden header name”), the only headers which are allowed to be manually set are those which the Fetch spec defines as being a “CORS-safelisted request-header”, which are:
+* Accept
+* Accept-Language
+* Content-Language
+* Content-Type (but note the additional requirements below)
+* Last-Event-ID
+* DPR
+* Downlink
+* Save-Data
+* Viewport-Width
+* Width
+
+### The only allowed values for the Content-Type header are:
+* application/x-www-form-urlencoded
+* multipart/form-data
+* text/plain
+
+### No event listeners are registered on any XMLHttpRequestUpload object used in the request.
+### No ReadableStream object is used in the request.
 
 
