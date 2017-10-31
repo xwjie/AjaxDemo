@@ -3,6 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
+
+
+<link rel="shortcut icon" type="image/png"
+	href="jasmine-2.8.0/jasmine_favicon.png">
+<link rel="stylesheet" type="text/css" href="jasmine-2.8.0/jasmine.css">
+
+<script src="jquery-1.11.3.min.js"></script>
+
+<script src="jasmine-2.8.0/jasmine.js"></script>
+<script src="jasmine-2.8.0/jasmine-html.js"></script>
+<script src="jasmine-2.8.0/boot.js"></script>
 </head>
 
 <body>
@@ -26,6 +37,72 @@
 
 
 	<script>
+		jasmine.DEFAULT_TIMEOUT_INTERVAL = 3000;
+
+		describe("My first Jasmine test", function() {
+			it("a spec with an expectation", function() {
+				expect(1).toBe(1);
+				expect(1 === 1).toBe(true);
+				expect('a').not.toBe('b');
+			});
+
+			it("an other spec in current suite", function() {
+				expect(true).toBe(true);
+			});
+		});
+
+		describe("mocking ajax", function() {		
+			it("jquery ajax success with getResponse", function(done) {
+				var result;
+
+				$.get("/get1").success(function(data) {
+					result = data;
+				});
+
+				setTimeout(function() {
+					expect(result).toEqual({
+						"code" : 0,
+						"msg" : "success",
+						"data" : "get1 ok"
+					});
+					done();
+				}, 500);
+
+				console.log("get-------");
+			});
+
+			it("跨域", function(done) {
+				var result;
+
+				$.get("http://b.com:8080/get1").success(function(data) {
+					result = data;
+				});
+
+				setTimeout(function() {
+					expect(result).toEqual({
+						"code" : 0,
+						"msg" : "success",
+						"data" : "get1 ok"
+					});
+					done();
+				}, 500);
+
+				console.log("get-------");
+
+			});
+
+			/*
+			it("takes a long time", function(done) {
+	            setTimeout(function() {
+	                done();
+	            }, 1000);
+	        });
+	 
+
+			*/
+			
+		});
+
 		function get1() {
 			$.get("http://b.com:8080/get1", function(data) {
 				console.log("get1 Loaded: ", data);
@@ -110,19 +187,19 @@
 					"X-Custom-Header1" : "can not include zhongwen1111"
 				},
 				beforeSend : function(xhr) {
-					xhr.setRequestHeader("X-Custom-Header2", "can not include zhongwen2222");
+					xhr.setRequestHeader("X-Custom-Header2",
+							"can not include zhongwen2222");
 					//xhr.setRequestHeader("X-Custom-Header3", "can not include zhongwen3333");
 				},
 				success : function(data) {
 					console.log("getWithHeader Loaded: ", data);
 				},
-				error:function(data) {
+				error : function(data) {
 					console.log("getWithHeader error: ", data);
 				},
 			})
 		}
 	</script>
-	<script src="jquery-1.11.3.min.js"></script>
 
 </body>
 </html>

@@ -16,8 +16,9 @@ import cn.xiaowenjie.beans.ResultBean;
 public class TestController {
 
 	@GetMapping("/get1")
-	public ResultBean<String> get1() {
+	public ResultBean<String> get1() throws InterruptedException {
 		System.out.println("\n-------TestController.get1()\n");
+		Thread.sleep(200);
 		return new ResultBean<String>("get1 ok");
 	}
 
