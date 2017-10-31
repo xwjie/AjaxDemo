@@ -457,7 +457,7 @@ jsonp不是使用xhr发送的，是使用动态插入script标签实现的，当前无法指定请求的method
 
 公司里面，最近别人问的最多的就是跨域问题，从来没有人跑过来问我数据结构的问题。。。
 
-`GET不一定就是普通请求。` 同样  `POST不一定就是非简单请求。`
+** GET不一定就是普通请求。POST不一定就是非简单请求。**
 
 ## Simple requests
 Some requests don’t trigger a CORS preflight. Those are called “simple requests” in this article, though the Fetch spec (which defines CORS) doesn’t use that term. A request that doesn’t trigger a CORS preflight—a so-called “simple request”—is one that meets all the following conditions:
