@@ -18,7 +18,6 @@ public class TestController {
 	@GetMapping("/get1")
 	public ResultBean<String> get1() throws InterruptedException {
 		System.out.println("\n-------TestController.get1()\n");
-		Thread.sleep(200);
 		return new ResultBean<String>("get1 ok");
 	}
 
@@ -47,7 +46,7 @@ public class TestController {
 	}
 
 	@GetMapping("/getWithHeader")
-	@CrossOrigin(allowedHeaders = { "X-Custom-Header1", "X-Custom-Header2", "X-Custom-Header4" })
+	//@CrossOrigin(allowedHeaders = { "X-Custom-Header1", "X-Custom-Header2", "X-Custom-Header4" })
 	public ResultBean<String> getWithHeader(
 			@RequestHeader(required = false, name = "X-Custom-Header1") String header1) {
 		System.out.println("\n-------TestController.getWithHeader(), header1=" + header1);

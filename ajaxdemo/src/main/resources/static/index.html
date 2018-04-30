@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <title>Insert title here</title>
 
-
-<link rel="shortcut icon" type="image/png"
-	href="jasmine-2.8.0/jasmine_favicon.png">
 <link rel="stylesheet" type="text/css" href="jasmine-2.8.0/jasmine.css">
 
 <script src="jquery-1.11.3.min.js"></script>
@@ -18,44 +15,68 @@
 
 <body>
 	<h1>ajax demo</h1>
-	<a href="javascript:get1()" href="#">get1</a>
-	<br />
-	<a href="javascript:post1()" href="#">post1</a>
-	<br />
-	<a href="javascript:post2()" href="#">post2 以form-urlencoded格式发送参数</a>
-	<br />
-	<a href="javascript:post3()" href="#">post3 以json格式发送</a>
-	<br />
-	<a href="javascript:getByJsonp()" href="#">getByJsonp</a>
-	<br />
-	<a href="javascript:getWithCookie()" href="#">getWithCookie
-		带cookie的请求</a>
-	<br />
-	<a href="javascript:getWithHeader()" href="#">getWithHeader
-		带自定义头的请求</a>
-	<br />
-
-
+	<div id="msg"></div>
 	<script>
-		jasmine.DEFAULT_TIMEOUT_INTERVAL = 3000;
+		jasmine.DEFAULT_TIMEOUT_INTERVAL = 1000;
 
-		describe("My first Jasmine test", function() {
-			it("a spec with an expectation", function() {
-				expect(1).toBe(1);
-				expect(1 === 1).toBe(true);
-				expect('a').not.toBe('b');
-			});
-
-			it("an other spec in current suite", function() {
-				expect(true).toBe(true);
-			});
+		$("#msg").ajaxComplete(function(event, request, settings) {
+			$(this).append("<li>请求完成.</li>");
 		});
 
-		describe("mocking ajax", function() {		
-			it("jquery ajax success with getResponse", function(done) {
+		var base = "http://127.0.0.1:8081";
+
+		describe("ajax跨域测试", function() {
+
+			it("getByJsonp", function(done) {
 				var result;
 
-				$.get("/get1").success(function(data) {
+				$.ajax({
+					type : "GET",
+					url : base + "/get1",
+					dataType : "jsonp",
+					ajaxComplete : function() {
+						console.log("ajaxComplete");
+					},
+					success : function(data) {
+						result = data;
+					}
+				});
+				setTimeout(function() {
+					expect(result).toEqual({
+						"code" : 0,
+						"msg" : "success",
+						"data" : "get1 ok"
+					});
+					done();
+				}, 100);
+			});
+
+			it("imooc", function(done) {
+				var result;
+
+				$.ajax({
+					type : "GET",
+					url : "http://www.imooc.com/u/loading",
+					dataType : "jsonp",
+					success : function(data) {
+						result = data;
+						console.log(data);
+					}
+				});
+				setTimeout(function() {
+					expect(result).toEqual({
+						"code" : 0,
+						"msg" : "success",
+						"data" : "get1 ok"
+					});
+					done();
+				}, 100);
+			});
+
+			it("跨域get", function(done) {
+				var result;
+
+				$.get(base + "/get1").success(function(data) {
 					result = data;
 				});
 
@@ -66,139 +87,143 @@
 						"data" : "get1 ok"
 					});
 					done();
-				}, 500);
-
-				console.log("get-------");
+				}, 100);
 			});
 
-			it("跨域", function(done) {
+			it("跨域post", function(done) {
 				var result;
 
-				$.get("http://b.com:8080/get1").success(function(data) {
-					result = data;
+				$.ajax({
+					type : "POST",
+					url : base + "/post1",
+					dataType : "json",
+					success : function(data) {
+						result = data;
+					}
 				});
 
 				setTimeout(function() {
 					expect(result).toEqual({
 						"code" : 0,
 						"msg" : "success",
-						"data" : "get1 ok"
+						"data" : "post1 ok"
 					});
 					done();
-				}, 500);
-
-				console.log("get-------");
-
+				}, 100);
 			});
 
-			/*
-			it("takes a long time", function(done) {
-	            setTimeout(function() {
-	                done();
-	            }, 1000);
-	        });
-	 
+			it("post2 以form-urlencoded格式发送参数", function(done) {
+				var result;
 
-			*/
-			
+				var data = {
+					key1 : '以json格式发送',
+					id1 : 12345
+				}
+
+				$.ajax({
+					type : "POST",
+					data : data,
+					url : base + "/post2",
+					dataType : "json",
+					success : function(data) {
+						result = data;
+					}
+				});
+
+				setTimeout(function() {
+					expect(result).toEqual({
+						"code" : 0,
+						"msg" : "success",
+						"data" : "post2 ok, param=Param [key1=以json格式发送, id1=12345]"
+					});
+					done();
+				}, 100);
+			});
+
+			it("post3 以json格式发送", function(done) {
+				var result;
+
+				var data = {
+					key1 : '以json格式发送',
+					id1 : 12345
+				}
+
+				$.ajax({
+					type : "POST",
+					contentType : "application/json",
+					data : JSON.stringify(data),
+					url : base + "/post3",
+					dataType : "json",
+					success : function(data) {
+						result = data;
+					}
+				});
+
+				setTimeout(function() {
+					expect(result).toEqual({
+						"code" : 0,
+						"msg" : "success",
+						"data" : "post3 ok, param=Param [key1=以json格式发送, id1=12345]"
+					});
+					done();
+				}, 100);
+			});
+
+			it("getWithCookie带cookie的请求", function(done) {
+				var result;
+
+				$.ajax({
+					type : "GET",
+					url : base + "/getWithCookie",
+					xhrFields : {
+						withCredentials : true
+					},
+					success : function(data) {
+						result = data;
+					}
+				})
+
+				setTimeout(function() {
+					expect(result).toEqual({
+						"code" : 0,
+						"msg" : "success",
+						"data" : "getWithCookie ok, cookie1=null"
+					});
+					done();
+				}, 100);
+			});
+
+			it("getWithHeader带自定义头的请求", function(done) {
+				var result;
+
+				$.ajax({
+					type : "GET",
+					url : base + "/getWithHeader",
+					headers : {
+						"X-Custom-Header1" : "can not include zhongwen1111"
+					},
+					beforeSend : function(xhr) {
+						xhr.setRequestHeader("X-Custom-Header2", "can not include zhongwen2222");
+						//xhr.setRequestHeader("X-Custom-Header3", "can not include zhongwen3333");
+					},
+					success : function(data) {
+						result = data;
+					},
+					error : function(data) {
+						console.log("getWithHeader error: ", data);
+					},
+				})
+
+				setTimeout(function() {
+					expect(result).toEqual({
+						"code" : 0,
+						"msg" : "success",
+						"data" : "getWithHeader ok, header1=can not include zhongwen1111"
+					});
+					done();
+				}, 100);
+			});
 		});
-
-		function get1() {
-			$.get("http://b.com:8080/get1", function(data) {
-				console.log("get1 Loaded: ", data);
-			});
-		}
-
-		function post1() {
-			$.ajax({
-				type : "POST",
-				url : "http://b.com:8080/post1",
-				dataType : "json",
-				success : function(data) {
-					console.log("post1 Loaded: ", data);
-				}
-			});
-		}
-
-		function post2() {
-			var data = {
-				key1 : '以form-urlencoded格式发送参数',
-				id1 : 12345
-			}
-
-			$.ajax({
-				type : "POST",
-				data : data,
-				url : "http://b.com:8080/post2",
-				dataType : "json",
-				success : function(data) {
-					console.log("post2 Loaded: ", data);
-				}
-			});
-		}
-
-		function post3() {
-			var data = {
-				key1 : '以json格式发送',
-				id1 : 12345
-			}
-
-			$.ajax({
-				type : "POST",
-				contentType : "application/json",
-				data : JSON.stringify(data),
-				url : "http://b.com:8080/post3",
-				dataType : "json",
-				success : function(data) {
-					console.log("post3 Loaded: ", data);
-				}
-			});
-		}
-
-		function getByJsonp() {
-			$.ajax({
-				type : "GET",
-				url : "http://b.com:8080/get1",
-				dataType : "jsonp",
-				success : function(data) {
-					console.log("jsonp Loaded: ", data);
-				}
-			});
-		}
-
-		function getWithCookie() {
-			$.ajax({
-				type : "GET",
-				url : "http://b.com:8080/getWithCookie",
-				xhrFields : {
-					withCredentials : true
-				},
-				success : function(data) {
-					console.log("getWithCookie Loaded: ", data);
-				}
-			})
-		}
-
-		function getWithHeader() {
-			$.ajax({
-				type : "GET",
-				url : "http://b.com:8080/getWithHeader",
-				headers : {
-					"X-Custom-Header1" : "can not include zhongwen1111"
-				},
-				beforeSend : function(xhr) {
-					xhr.setRequestHeader("X-Custom-Header2",
-							"can not include zhongwen2222");
-					//xhr.setRequestHeader("X-Custom-Header3", "can not include zhongwen3333");
-				},
-				success : function(data) {
-					console.log("getWithHeader Loaded: ", data);
-				},
-				error : function(data) {
-					console.log("getWithHeader error: ", data);
-				},
-			})
-		}
 	</script>
 
 </body>

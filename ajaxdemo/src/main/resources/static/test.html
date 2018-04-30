@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>Insert title here</title>
+<script src="jquery-1.11.3.min.js"></script>
+</head>
+<body>
+	<script>
+		$.get("/xss1", function(data) {
+			$("#name").text(data.data);
+			$("#name2").html(data.data);
+			$("#name3").text(data.data);
+		});
+	</script>
+	<div id="name"></div>
+	<div id="name2"></div>
+	<pre id="name3"></pre>
+</body>
+</html>
